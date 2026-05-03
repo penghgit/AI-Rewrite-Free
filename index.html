@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Free AI Paraphraser</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
+    body{max-width:800px;margin:40px auto;padding:0 20px;background:#f9f9f9}
+    .box{background:white;padding:24px;border-radius:12px;box-shadow:0 2px 10px #00000010}
+    textarea{width:100%;height:180px;padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:8px}
+    button{background:#007bff;color:white;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:16px}
+    .result{margin-top:20px;padding:16px;background:#f1f1f1;border-radius:8px;min-height:100px}
+    .pay{margin-top:20px;text-align:center;padding:20px;background:#e8f4ff;border-radius:8px}
+    .pay h3{margin-bottom:10px;color:#007bff}
+    .pay p{margin:8px 0;color:#333}
+    .pay a{display:inline-block;margin-top:12px;padding:10px 20px;background:#007bff;color:white;border-radius:6px;text-decoration:none;font-weight:bold}
+    .limit{color:#666;font-size:14px;margin-bottom:10px}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Free AI Paraphraser | Rewrite Text</h2>
+    <p class="limit">Free 3 uses per day for regular users</p >
+    <textarea id="input" placeholder="Paste your text here..."></textarea>
+    <button onclick="rewrite()">Paraphrase</button>
+    <div class="result" id="result"></div>
+  </div>
+
+  <div class="pay" id="payBox" style="display:none;">
+    <h3>Daily Free Limit Reached</h3>
+    <p>Only <strong>$19.9 / Year</strong></p >
+    <p>50 uses per day for 1 full year</p >
+    <p>Valid for 365 days, easy renewal</p >
+    <a href="https://www.paypal.com/ncp/payment/QG5644EDJ524Q" target="_blank">Pay Now via PayPal</a >
+  </div>
+
+  <script>
+    const DAILY_LIMIT = 3;
+    let count = 0;
+
+    async function rewrite() {
+      if(count >= DAILY_LIMIT) {
+        document.getElementById("result").innerText = "Daily free 3 uses limit reached.";
+        document.getElementById("payBox").style.display = "block";
+        return;
+      }
+
+      let text = document.getElementById("input").value.trim();
+      if(!text) {
+        alert("Please paste your text first");
+        return;
+      }
+
+      document.getElementById("result").innerText = "Processing...";
+
+      const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "Authorization": "Bearer sk-e9a1a33a42d141b09752efbca4ec37cd"
+        },
+        body:JSON.stringify({
+          model: "deepseek-chat",
+          messages: [
+            {role:"system",content:"You are a professional text paraphraser, rewrite the text fluently and keep the original meaning."},
+            {role:"user",content:text}
+          ],
+          temperature: 0.7
+        })
+      });
+
+      const data = await res.json();
+      let out = data.choices?.[0]?.message?.content || "Error, please try again later.";
+      document.getElementById("result").innerText = out;
+      count++;
+    }
+  </script>
+</body>
+</html>
